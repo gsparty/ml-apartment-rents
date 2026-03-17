@@ -5,26 +5,23 @@
 
 ## Setup
 pip install -r requirements.txt
-# or
-conda env create -f environment.yml
-conda activate ml-apartment-rents
 
 ## Data
-Download the **detailed** listings file (79 columns, ~3,400 rows) from:
+Download the **detailed** listings file (79 columns) from:
 https://insideairbnb.com/get-the-data/ — select Zurich, download listings.csv.gz
 Extract and place at: data/raw/listings.csv
 
-Important: do NOT use the simple listings file (18 columns). The pipeline requires
-the detailed version with columns such as accommodates, bedrooms, bathrooms, etc.
+IMPORTANT: Use the detailed version (listings.csv.gz, ~79 columns).
+Do NOT use the simple listings file (18 columns) — the pipeline will break.
 
-## Notebook order
-1. 01_data_ingestion.ipynb  — load raw data, first sanity check, save to processed/
-2. 02_eda.ipynb             — price distributions, boxplots by room type, correlation matrix
-3. 03_preprocessing.ipynb  — outlier cap at 99th percentile, log-transform price,
-                              encode categoricals, StandardScaler, 80/20 train/test split
-4. 04_modeling.ipynb        — Linear Regression baseline vs Random Forest (100 trees),
-                              5-fold cross-validation, save best model
-5. 05_evaluation_xai.ipynb — final metrics, residual plot, SHAP summary + bar plots
+## Reproduction — run notebooks in this exact order
+1. 01_data_ingestion.ipynb  — loads raw data, saves to data/processed/
+2. 02_eda.ipynb             — EDA plots, saves updated data/processed/listings_eda.csv
+3. 03_preprocessing.ipynb  — cleaning, encoding, splitting, saves X_train/X_test/y_train/y_test
+4. 04_modeling.ipynb        — trains models, saves models/rent_pipeline.pkl
+5. 05_evaluation_xai.ipynb — metrics, residuals, SHAP plots
+
+Each notebook depends on the previous one. Always restart kernel and run all cells.
 
 ## Results
 | Model             | MAE (CHF) | RMSE (CHF) | R²    |
@@ -32,15 +29,12 @@ the detailed version with columns such as accommodates, bedrooms, bathrooms, etc
 | Linear Regression | 77.40     | 117.30     | 0.254 |
 | Random Forest     | 51.85     | 100.89     | 0.448 |
 
-Random Forest outperforms Linear Regression across all metrics.
-Prices were log-transformed before training and reversed for evaluation.
-
 ## Key findings (SHAP)
-- Bedrooms is the strongest predictor (mean SHAP ~30)
-- Accommodates and latitude are second and third
+- Bedrooms is the strongest price predictor (mean SHAP ~30)
+- Accommodates and latitude follow as second and third
 - Private room type reduces predicted price significantly
 - Neighbourhood effects are present but individually small
-- Low R2 reflects host pricing discretion not captured by structured features
+- Remaining variance reflects host discretion not captured by structured features
 
 ## Output
 - Trained model:  models/rent_pipeline.pkl
